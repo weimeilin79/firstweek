@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+        #chat-container {
+            width: 400px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        #chat-history {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .user-message {
+            background-color: #e9e9e9;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        .bot-message {
+            background-color: #c2f0c2;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        #user-input {
+            width: calc(100% - 70px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #send-button {
+            width: 60px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-history"></div>
+        <input type="text" id="user-input" placeholder="Type your message...">
+        <button id="send-button">Send</button>
+    </div>
+
+    <script>
+      const chatHistory = document.getElementById('chat-history');
+      const userInput = document.getElementById('user-input');
+      const sendButton = document.getElementById('send-button');
+
+      sendButton.addEventListener('click', sendMessage);
+
+      userInput.addEventListener('keypress', function(event) {
+        if (event.key === "Enter") {
+          sendMessage();
+        }
+      });
+
+      function sendMessage() {
+        const message = userInput.value;
+        if (message.trim() !== "") { // Don't send empty messages
+            displayMessage(message, 'user');
+            userInput.value = ''; // Clear the input field
+
+            // Send message to backend
+            fetch('/chatbot', {  // Replace '/chatbot' with your backend endpoint
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Data received from server:", data);
+                displayMessage(data.response, 'bot');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayMessage("An error occurred.", 'bot');
+            });
+        }
+
+
+      }
+
+      function displayMessage(message, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add(sender + '-message');
+        messageDiv.textContent = message;
+        chatHistory.appendChild(messageDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
+      }
+
+
+
+    </script>
+</body>
+</html>
+
