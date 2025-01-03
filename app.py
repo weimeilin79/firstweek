@@ -6,22 +6,12 @@ import vertexai
 from vertexai.generative_models import GenerativeModel
 from flight import *
 
-
 app = Flask(__name__)
 
 @app.route('/')
-def hello():
-    """Return a friendly HTTP greeting."""
-    message = "It's running!"
-
-    """Get Cloud Run environment variables."""
-    service = os.environ.get('K_SERVICE', 'Unknown service')
-    revision = os.environ.get('K_REVISION', 'Unknown revision')
-
-    return render_template('index.html',
-        message=message,
-        Service=service,
-        Revision=revision)
+def index():
+    """Return a Index of available test pages."""
+    return render_template('index.html')
 
 #function that will route to test.html
 @app.route('/test')
@@ -62,8 +52,10 @@ def handle_prompt_vertex():
 def handle_chatbot():
     data = request.get_json()
     message = data.get('message')
-    response = {"response": message} # Changed key to 'response'
-    print(f"Sending response: {response}") # Debug print statement
+    chat_session = getSession()
+    chat_response = getChatResponse(chat_session, message)
+    print(f"Sending response: {chat_response}") # Debug print statement
+    response = {"response": chat_response} # Changed key to 'response'
     return jsonify(response)
     
 #Implement the call_gemma_model using vertex sdk
@@ -82,7 +74,6 @@ def call_vertex(prompt):
     model = GenerativeModel("gemini-pro")
     response = model.generate_content(prompt)
     return response.text
-
 
 
 if __name__ == '__main__':
