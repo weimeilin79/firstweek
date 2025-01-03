@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gemma Test - Vertex AI</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+        #container {
+            width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ddd;
+            cursor: default;
+        }
+        #output {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            resize: vertical; /* Allow vertical resizing of textarea */
+            min-height: 100px; /* Set a minimum height */
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Gemma Test - Vertex AI</h1>
+        <label for="prompt">Prompt:</label><br>
+        <input type="text" id="prompt" name="prompt"><br><br>
+        <button onclick="sendPrompt()">Submit</button><br><br>
+        <textarea id="output" rows="10" cols="50" readonly></textarea>
+    </div>
+
+    <div id="loading">
+        <div class="loader" id="loader"></div> </div>
+    </div>
+    
+
+    <script>
+
+        // Hide the loader initially
+        window.onload = function() { //add this
+            const loader = document.getElementById('loader');
+            loader.style.display = 'none'; 
+        };
+
+        function sendPrompt() {
+            const prompt = document.getElementById("prompt").value;
+            const url = '/call-vertex';
+            const button = document.querySelector('button');
+            const loadingDiv = document.getElementById('loading');
+            const loader = document.getElementById('loader');
+
+            // Disable button and show loading effect
+            button.disabled = true;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt: prompt })
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("output").value = data;
+
+                 // Re-enable button and hide loading after response
+                button.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById("output").value = "Error: " + error;
+                 // Re-enable button and hide loading after error
+                button.disabled = false;
+            });
+        }
+    </script>
+
+</body>
+</html>
+
