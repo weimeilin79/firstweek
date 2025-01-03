@@ -52,8 +52,11 @@ def handle_prompt_vertex():
 def handle_chatbot():
     data = request.get_json()
     message = data.get('message')
+    links = data.get('links', []) # Get links, default to empty list if not provided
+    print(f"Received links: {links}")  
+
     chat_session = getSession()
-    chat_response = getChatResponse(chat_session, message)
+    chat_response = getChatResponse(chat_session, message, links)
     print(f"Sending response: {chat_response}") # Debug print statement
     response = {"response": chat_response} # Changed key to 'response'
     return jsonify(response)

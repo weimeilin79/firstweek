@@ -47,13 +47,26 @@
             border-radius: 5px;
             cursor: pointer;
         }
-
+        .link-input-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .link-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
     <div id="chat-container">
         <div id="chat-history"></div>
         <input type="text" id="user-input" placeholder="Type your message...">
+        <div id="links-container"></div>
+        <button id="add-link">+</button>
         <button id="send-button">Send</button>
     </div>
 
@@ -61,19 +74,51 @@
       const chatHistory = document.getElementById('chat-history');
       const userInput = document.getElementById('user-input');
       const sendButton = document.getElementById('send-button');
+      const linksContainer = document.getElementById('links-container');
+      const addLinkButton = document.getElementById('add-link');
 
+
+      addLinkButton.addEventListener('click', () => {
+            addLinkInput();
+        });
       sendButton.addEventListener('click', sendMessage);
-
       userInput.addEventListener('keypress', function(event) {
         if (event.key === "Enter") {
           sendMessage();
         }
       });
 
+      function addLinkInput() {
+            const container = document.createElement('div');
+            container.classList.add('link-input-container');
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.classList.add('link-input');
+            input.placeholder = 'Enter URL';
+            container.appendChild(input);
+
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = '-';
+            removeButton.addEventListener('click', () => {
+                linksContainer.removeChild(container);
+            });
+            container.appendChild(removeButton);
+
+
+            linksContainer.appendChild(container);
+        }
+
       function sendMessage() {
         const message = userInput.value;
-        if (message.trim() !== "") { // Don't send empty messages
+        const links = Array.from(document.querySelectorAll('.link-input'))
+                                 .map(input => input.value)
+                                 .filter(link => link.trim() !== ''); // Filter out empty links
+
+        if (message.trim() !== "" || links.length > 0) { // Don't send empty messages
             displayMessage(message, 'user');
+            links.forEach(link => displayMessage(link, 'user'));
             userInput.value = ''; // Clear the input field
 
             // Send message to backend
@@ -82,12 +127,22 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ message: message })
+                body: JSON.stringify({ message: message , links: links})
             })
             .then(response => response.json())
             .then(data => {
                 console.log("Data received from server:", data);
                 displayMessage(data.response, 'bot');
+                // Clear link inputs *after* the message is sent and displayed
+                const linkInputs = document.querySelectorAll('.link-input');
+                linkInputs.forEach(input => {
+                    input.value = '';
+                });
+                //Remove the link input containers 
+                const linkContainers = document.querySelectorAll('.link-input-container');
+                linkContainers.forEach(container => {
+                    linksContainer.removeChild(container);
+                });
             })
             .catch(error => {
                 console.error('Error:', error);
