@@ -65,7 +65,13 @@ def handle_chatbot():
 
 def call_gemma_model(prompt,token):
     genai.configure(api_key=token)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    
+    # Tunned model 
+    # projects/pure-album-446616-n3/locations/us-central1/models/my_trained_model
+    # Model
+    # gemini-1.5-flash-002
+
+    model = genai.GenerativeModel("projects/pure-album-446616-n3/locations/us-central1/models/my_trained_model")
     response = model.generate_content(prompt)
     return response.text
 
