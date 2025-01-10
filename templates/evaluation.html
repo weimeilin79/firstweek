@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prompt Evaluation</title>
+    <style>
+        /* Basic styling - you can customize this */
+        body { font-family: sans-serif; }
+        #chat-container { width: 600px; margin: 0 auto; }
+        #results-table {
+            width: 100%;
+            border-collapse: collapse; /* For better table appearance */
+            margin-top: 20px;
+        }
+        #results-table th, #results-table td {
+            border: 1px solid #ddd; /* Add borders to cells */
+            padding: 8px;
+            text-align: left;
+        }
+        #prompt-input { width: calc(100% - 70px); padding: 10px; border: 1px solid #ccc; border-radius: 5px;}
+        #submit-button { width: 60px; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;}
+
+        
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <input type="text" id="prompt-input" placeholder="Enter your prompt...">
+        <button id="submit-button">Submit</button>
+        <table id="results-table"></table>
+    </div>
+
+    <script>
+        const promptInput = document.getElementById('prompt-input');
+        const submitButton = document.getElementById('submit-button');
+        const resultsTable = document.getElementById('results-table');
+
+
+        submitButton.addEventListener('click', () => {
+            const prompt = promptInput.value;
+            if (prompt.trim() !== "") {  // Don't send empty prompts
+                promptInput.value = ''; // Clear input
+                sendPromptToBackend(prompt);
+            }
+        });
+
+        promptInput.addEventListener('keypress', function(event) {
+          if (event.key === "Enter") {
+            submitButton.click(); // Trigger the button click on Enter
+          }
+        });
+
+
+
+        async function sendPromptToBackend(prompt) {
+            try {
+                const response = await fetch('/call-evaluation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const data = await response.json();
+
+                // Clear existing table rows:
+                resultsTable.innerHTML = ""; // Clear the table
+
+
+                if (data && data.length > 0) { // Display the data in a table
+                    // Create table header
+                    const headerRow = resultsTable.insertRow();
+                    Object.keys(data[0]).forEach(key => {
+                        const headerCell = headerRow.insertCell();
+                        headerCell.textContent = key;
+                    });
+
+                    // Create table rows
+                    data.forEach(item => {
+                        const row = resultsTable.insertRow();
+                        Object.values(item).forEach(value => {
+                            const cell = row.insertCell();
+                            cell.textContent = value;
+                        });
+                    });
+
+                } else {
+                   // Handle no data or errors
+                    const row = resultsTable.insertRow();
+                    const cell = row.insertCell();
+                    cell.textContent = "No better prompts received or error from backend.";
+                }
+
+
+
+            } catch (error) {
+                console.error("Error:", error);
+                 // Handle errors
+                resultsTable.innerHTML = ""; // Clear the table
+                const row = resultsTable.insertRow();
+                const cell = row.insertCell();
+                cell.textContent = "Error communicating with the server.";
+            }
+        }
+
+
+
+    </script>
+</body>
+</html>
+
