@@ -78,7 +78,13 @@ def handle_evaluation():
     response_list = json.loads(response_str) # Parses string to list of dict
     return jsonify(response_list) # jsonify the list
 
-
+@app.route('/evaluate_genai', methods=['POST'])
+def handle_evaluation_genai(): 
+    data = request.get_json()
+    prompt = data.get('prompt')
+    print(f"{prompt}")
+    response = evaluate_genai(prompt)
+    return response
 
 #Implement the call_gemma_model using vertex sdk
 

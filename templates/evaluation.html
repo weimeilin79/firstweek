@@ -3,23 +3,75 @@
 <head>
     <title>Prompt Evaluation</title>
     <style>
-        /* Basic styling - you can customize this */
         body { font-family: sans-serif; }
-        #chat-container { width: 600px; margin: 0 auto; }
-        #results-table {
-            width: 100%;
-            border-collapse: collapse; /* For better table appearance */
-            margin-top: 20px;
-        }
-        #results-table th, #results-table td {
-            border: 1px solid #ddd; /* Add borders to cells */
-            padding: 8px;
-            text-align: left;
-        }
-        #prompt-input { width: calc(100% - 70px); padding: 10px; border: 1px solid #ccc; border-radius: 5px;}
-        #submit-button { width: 60px; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;}
+        #chat-container { width: 80%; margin: 20px auto; } /* Center and add margin */
 
-        
+        /* Style both tables the same */
+        #results-table, #eval-table-{/*prompt substring here - this won't work*/} {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Add shadow */
+            border-radius: 8px; /* Rounded corners */
+            overflow: hidden; /* Hide extra content from rounded corners */
+        }
+
+        #results-table th, #results-table td,
+        #eval-table-{/*prompt substring here - this won't work*/} th, #eval-table-{/*prompt substring here - this won't work*/} td {
+            border: 1px solid #ddd;
+            padding: 12px 15px; /* Increased padding */
+            text-align: left;
+            transition: background-color 0.3s ease; /* Smooth hover effect */
+        }
+
+
+        #results-table th {
+            background-color: #f2f2f2; /* Header background */
+        }
+
+         #eval-table-{/*prompt substring here - this won't work*/} th {
+            background-color: #f8f8f8; /* Header background - slightly different */
+         }
+
+        /* Hover effect on table rows */
+        #results-table tr:hover, #eval-table-{/*prompt substring here - this won't work*/} tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        #prompt-input { 
+            width: calc(100% - 70px); 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px;
+            box-sizing: border-box; /* Include padding in width */
+        }
+        #submit-button { 
+            width: 60px; 
+            padding: 10px; 
+            background-color: #4CAF50; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+        }
+
+        /* Styles for the output hover div */
+        .output-hover {
+            position: absolute;
+            background-color: white;
+            border: 1px solid black;
+            padding: 5px;
+            z-index: 1000;
+        }
+
+        /* Styles for the explanation hover div */
+        .explanation-hover {
+            position: absolute;
+            background-color: white;
+            border: 1px solid black;
+            padding: 5px;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -80,6 +132,15 @@
                             const cell = row.insertCell();
                             cell.textContent = value;
                         });
+
+                        // Add Evaluate button
+                        const evaluateCell = row.insertCell();
+                        const evaluateButton = document.createElement('button');
+                        evaluateButton.textContent = 'Evaluate';
+                        evaluateButton.addEventListener('click', () => {
+                           sendPromptToEvaluate(item.response); // Send 'response' value
+                        });
+                        evaluateCell.appendChild(evaluateButton);
                     });
 
                 } else {
@@ -101,7 +162,92 @@
             }
         }
 
+        async function sendPromptToEvaluate(prompt) { 
+            try {
+                const response = await fetch('/evaluate_genai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                const evalDataString = await response.text(); // Get the JSON string
+            const evalData = JSON.parse(evalDataString); // Parse into JavaScript object
+            console.log("Parsed evalData:", evalData);     // Log the parsed object
 
+            const evalTable = document.createElement('table');
+            evalTable.id = `eval-table-${prompt.substring(0, 10)}`; // Assign an ID
+
+            const headerRow = evalTable.insertRow();
+            ['output', 'coherence', 'verbosity', 'question_answering_quality', 'summarization_quality'].forEach(headerText => {
+                const headerCell = headerRow.insertCell();
+                headerCell.textContent = headerText;
+                headerCell.style.fontWeight = 'bold'; // Optional styling
+            });
+
+            if (evalData && evalData.metrics_table && evalData.metrics_table.length > 0) {  // Access the correct property
+                evalData.metrics_table.forEach(item => {  // Iterate over the "metrics_table" array
+                    const evalRow = evalTable.insertRow();
+                    // Display desired columns
+                    ['output', 'coherence/score', 'verbosity/score', 'question_answering_quality/score', 'summarization_quality/score'].forEach(key => {
+                        const evalCell = evalRow.insertCell();
+                        if (key === 'output') { // Special handling for "output" column
+                            const shortenedOutput = item[key].length > 100 ? item[key].substring(0, 100) + "..." : item[key];
+                            evalCell.textContent = shortenedOutput;
+
+                            // Add hover effect to show full output
+                            evalCell.addEventListener('mouseover', () => {
+                                const outputDiv = document.createElement('div');
+                                outputDiv.classList.add('output-hover');  // Add the CSS class
+                                outputDiv.textContent = item[key]; // Full output here
+                                document.body.appendChild(outputDiv);
+
+                                const cellRect = evalCell.getBoundingClientRect();
+                                outputDiv.style.left = `${cellRect.left}px`;
+                                outputDiv.style.top = `${cellRect.bottom}px`;
+                            });
+
+                            evalCell.addEventListener('mouseout', () => {
+                                const outputDiv = document.querySelector('div:last-child'); // Select the last added div
+                                if (outputDiv) document.body.removeChild(outputDiv);
+
+                            });
+
+
+                        } else {
+
+                            evalCell.textContent = item[key];
+
+                            // Add hover effect for explanations:
+                            if (key.endsWith('/score')) { // Only add hover to score cells
+                                const explanation = item[key.replace('/score', '/explanation')];
+                                evalCell.addEventListener('mouseover', () => {
+                                    const explanationDiv = document.createElement('div');
+                                    explanationDiv.classList.add('explanation-hover'); // Add the CSS class
+                                    explanationDiv.textContent = explanation;
+                                    document.body.appendChild(explanationDiv); // Append to body or another suitable container
+
+
+                                    // Position dynamically based on cell's position
+                                    const cellRect = evalCell.getBoundingClientRect();
+                                    explanationDiv.style.left = `${cellRect.left}px`;
+                                    explanationDiv.style.top = `${cellRect.bottom}px`; // Below the cell
+                                });
+
+                                evalCell.addEventListener('mouseout', () => {
+                                    const explanationDiv = document.querySelector('div:last-child');
+                                    if(explanationDiv) document.body.removeChild(explanationDiv);
+                                });
+                            }
+                        }
+                });
+                    
+                });
+                } 
+            resultsTable.parentNode.insertBefore(evalTable, resultsTable.nextSibling);
+
+            } catch (error) {
+                console.error("Evaluation Error:", error);
+            }
+        }
 
     </script>
 </body>

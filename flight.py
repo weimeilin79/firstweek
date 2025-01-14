@@ -6,17 +6,17 @@ from vertexai.generative_models import GenerativeModel, ChatSession, Part
 
 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")  # Get project ID from env
 
-# Tunned model 
-# projects/pure-album-446616-n3/locations/us-central1/models/my_trained_model
-# Model
-# gemini-1.5-flash-002
-model = GenerativeModel("projects/pure-album-446616-n3/locations/us-central1/models/397980328301428736") 
-
 chat_session = None
 if not project_id:
     raise RuntimeError("GOOGLE_CLOUD_PROJECT environment variable not set.")
     
 vertexai.init(project=project_id,)
+
+# Tunned model 
+# projects/pure-album-446616-n3/locations/us-central1/endpoints/108061102289453056
+# gemini-1.5-flash-002
+model = GenerativeModel("gemini-1.5-flash-002") 
+
 
 def getSession():
     global chat_session 
