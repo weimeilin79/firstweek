@@ -10,7 +10,7 @@ This repository showcases a self-learning project exploring Vertex AI and other 
 
 * **Prompt Evaluation:** This component demonstrates how to evaluate different Large Language Models (LLMs) during inference time. It uses pointwise evaluation metrics such as coherence, verbosity, and question-answering quality to compare the responses of different models for a given prompt. This section also allows exploring better prompts. (`/evaluation`)
 
-* **RAG Integration:**  
+* **RAG Integration:**  Uses Vector Search to retrieve related doc with embedding
 
 
 ## Key Technologies Used
@@ -27,12 +27,13 @@ This repository showcases a self-learning project exploring Vertex AI and other 
 2. **Install dependencies:** `pip install -r requirements.txt`
 3. **Set environment variables:**
     * `GOOGLE_CLOUD_PROJECT`: Your GCP project ID.
-4. **Run the Flask application:** `python app.py`
+4. **Run the Flask application:** `python3 app.py`
 
+
+For RAG
+1. **Run the application:** `python3 rag.py`
 
 ## Future Work
-
-* RAG
 * Security 
 * Reasoning 
 * Agentic
