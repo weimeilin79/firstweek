@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, jsonify
 from google.cloud import aiplatform
 import vertexai
 from vertexai.generative_models import GenerativeModel
-from flight import *
+from flightrag import *
 from evaluation import *
 
 
@@ -63,8 +63,9 @@ def handle_chatbot():
     links = data.get('links', []) # Get links, default to empty list if not provided
     print(f"Received links: {links}")  
 
-    chat_session = getSession()
-    chat_response = getChatResponse(chat_session, message, links)
+    #chat_session = getSession()
+    #chat_response = getChatResponse(chat_session, message, links)
+    chat_response = getChatResponse(message, links)
     print(f"Sending response: {chat_response}") # Debug print statement
     response = {"response": chat_response} # Changed key to 'response'
     return jsonify(response)
