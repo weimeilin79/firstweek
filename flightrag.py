@@ -78,7 +78,7 @@ def getChatResponse(query, links):
                     content=(
                         "You are a helpful assistant that help answering question and it should be all about travel planning and advice "
                         f"Here are some past conversation history between you and the user {relevant_history}"
-                        f"Here are some contenxt that is relavant to the question {relevant_resource}"
+                        f"Here are some contenxt that is relavant to the question {relevant_resource} that you might use"
                     )
                 ),
                 input_msg,
