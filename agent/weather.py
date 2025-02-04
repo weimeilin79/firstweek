@@ -36,38 +36,41 @@ def get_temperature(lat: float, lng: float):
     temperature = data["current"]["temperature_2m"]
     return temperature
 
-def suggest_clothing(temp: float):
-    return llm.invoke("What clothing do you recommend if the temperature is {temp} celsius)}")
+def suggest_clothing(temperature: float):
+    """Suggest and recommend to wear base on temperature given
 
 
-def ask_llm(input_msg):
-    prompt_template = ChatPromptTemplate.from_messages(
-            [
-                SystemMessage(
+    Args:
+        temperature: temperature float
+    """
+    query = f"What clothing do you recommend if the temperature is {temperature} celsius?"
+    print(f"-------->{query}")
+    response = llm.invoke(query)
+    print(f"CLOTHING RESPONSE------------>temperature: {response.content}")
+    return {"messages": response.content}
+
+tools = [get_temperature, suggest_clothing]
+
+def ask_llm(state: MessagesState):
+
+    sys_msg = SystemMessage(
                     content=(
-                        "You are a helpful assistant that help answering question and it should be all about travel advice "
+                        "You are a helpful assistant that help answering question on weather and travel advice "
                     )
-                ),
-                input_msg,
-            ]
-        )
+                )
 
-    prompt = prompt_template.format()
-    llm_with_tools = llm.bind_tools([get_temperature, suggest_clothing])
-    return llm_with_tools.invoke(prompt)
+    llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
+    return {"messages": llm_with_tools.invoke([sys_msg] + state["messages"])} 
 
-def ask_llm_with_tool(state: MessagesState):
-    print(f"---->{state["messages"]}")
-    return {"messages": [ask_llm(state["messages"][0].content)]}
 
 
 
 if __name__ == '__main__':
-    mymsg =  "Get the current temperature of location lat 35.447246 and ln -85.069161, and suggest what cloth to wear"
+    mymsg =  "What's the current temperature of location lat 35.447246 and ln -85.069161. Suggest what to wear base on the temperature"
     #print(mymsg)
     builder = StateGraph(MessagesState)
-    builder.add_node("ask_llm_with_tool", ask_llm_with_tool)
-    builder.add_node("tools", ToolNode([get_temperature]))
+    builder.add_node("ask_llm_with_tool", ask_llm)
+    builder.add_node("tools", ToolNode(tools))
     builder.add_edge(START, "ask_llm_with_tool")
     builder.add_conditional_edges("ask_llm_with_tool",tools_condition)
     builder.add_edge("tools", "ask_llm_with_tool")
