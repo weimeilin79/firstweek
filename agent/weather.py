@@ -36,6 +36,8 @@ def get_temperature(lat: float, lng: float):
     temperature = data["current"]["temperature_2m"]
     return temperature
 
+def suggest_clothing(temp: float):
+    return llm.invoke("What clothing do you recommend if the temperature is {temp} celsius)}")
 
 
 def ask_llm(input_msg):
@@ -51,7 +53,7 @@ def ask_llm(input_msg):
         )
 
     prompt = prompt_template.format()
-    llm_with_tools = llm.bind_tools([get_temperature])
+    llm_with_tools = llm.bind_tools([get_temperature, suggest_clothing])
     return llm_with_tools.invoke(prompt)
 
 def ask_llm_with_tool(state: MessagesState):
@@ -61,14 +63,14 @@ def ask_llm_with_tool(state: MessagesState):
 
 
 if __name__ == '__main__':
-    mymsg =  "Get the current temperature of location lat 35.447246 and ln -85.069161."
+    mymsg =  "Get the current temperature of location lat 35.447246 and ln -85.069161, and suggest what cloth to wear"
     #print(mymsg)
     builder = StateGraph(MessagesState)
     builder.add_node("ask_llm_with_tool", ask_llm_with_tool)
     builder.add_node("tools", ToolNode([get_temperature]))
     builder.add_edge(START, "ask_llm_with_tool")
     builder.add_conditional_edges("ask_llm_with_tool",tools_condition)
-    builder.add_edge("tools", END)
+    builder.add_edge("tools", "ask_llm_with_tool")
     graph = builder.compile()
 
     messages = graph.invoke({"messages": mymsg})
