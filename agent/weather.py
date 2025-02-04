@@ -48,8 +48,21 @@ def suggest_clothing(temperature: float):
     response = llm.invoke(query)
     print(f"CLOTHING RESPONSE------------>temperature: {response.content}")
     return {"messages": response.content}
+    
+def find_location_name(lat: float, lng: float):
+    """Base on the given latitude and longitude, provide the name like town (if applicable), state(if applicable) and country(if applicable) of the location
+    
+    Args:
+        lat: Latitude float
+        lng: Longitude float
+    """
+    query = f"What is the name like town (if applicable), state(if applicable) and country(if applicable) of the location in lat {lat} and lng {lng}?"
+    print(f"-------->{query}")
+    response = llm.invoke(query)
+    print(f"Location Name RESPONSE------------>temperature: {response.content}")
+    return {"messages": response.content}
 
-tools = [get_temperature, suggest_clothing]
+tools = [get_temperature, suggest_clothing,find_location_name]
 
 def ask_llm(state: MessagesState):
 
@@ -65,8 +78,8 @@ def ask_llm(state: MessagesState):
 
 
 
-if __name__ == '__main__':
-    mymsg =  "What's the current temperature of location lat 35.447246 and ln -85.069161. Suggest what to wear base on the temperature"
+def find_location_info(lat: float, lng: float):
+    mymsg =  f"What's the current temperature of location lat {lat} and ln {lng}? What's the name of the location? Suggest what to wear base on the temperature"
     #print(mymsg)
     builder = StateGraph(MessagesState)
     builder.add_node("ask_llm_with_tool", ask_llm)
@@ -80,7 +93,10 @@ if __name__ == '__main__':
     print(messages)
     for m in messages['messages']:
         m.pretty_print()
-    #print(get_temperature(35.447246,-85.069161))
+    #print the last item in  messages['messages']
+    return messages['messages'][-1].content
+
+
 
 
 
